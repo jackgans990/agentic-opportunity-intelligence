@@ -1,1 +1,1 @@
-username,profile_url,display_name,language,category,ecosystem,topics,source,notes,discovered_at,last_verified_at,status
+username,profile_url,display_name,language,category,ecosystem,topics,source,notes,discovered_at,last_verified_at,status,projects_shared,projects_succeeded,sample_size,success_definition,paid_promo_flag,evidence_urls,last_reviewed_at

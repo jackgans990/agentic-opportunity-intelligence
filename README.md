@@ -17,7 +17,7 @@ This repository contains instructions, rules, and data formats for an AI researc
 | `config/chains.yaml`, `config/monitoring.yaml` | Supported chains and watchlist/reassessment rules |
 | `discovery/` | Search keywords, queries, and excluded terms |
 | `database/` | Record formats for projects, evidence, and watchlist |
-| `sources/raw/` | Original seed data. Keep immutable. |
+| `sources/raw/` | Seed data. initial_wallets.csv is immutable; the other files are append-only working files. |
 
 ## Workflow
 
