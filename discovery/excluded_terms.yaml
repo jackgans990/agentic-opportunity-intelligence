@@ -1,0 +1,37 @@
+version: 1
+
+term_groups:
+  testnet_noise:
+    terms:
+      - testnet faucet
+      - testnet tutorial
+      - testnet points
+      - testnet tasks
+
+  educational_noise:
+    terms:
+      - blockchain tutorial
+      - NFT tutorial
+      - how to create NFT
+      - beginner guide
+      - coding tutorial
+
+  unrelated_campaigns:
+    terms:
+      - job vacancy
+      - hiring
+      - giveaway unrelated to crypto
+      - paid promotion
+
+filtering_rules:
+  mode: soft_filter
+  never_discard_by_keyword_alone: true
+  preserve_matching_candidates: true
+  require_context_check: true
+  record_filter_reason: true
+
+  important:
+    - Do not automatically reject a project only because it mentions testnet.
+    - A testnet project may still have a relevant future mainnet or NFT opportunity.
+    - Distinguish irrelevant testnet farming from projects with credible upcoming opportunities.
+    - Never discard a candidate with independent evidence of a relevant opportunity.
