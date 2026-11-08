@@ -8,29 +8,34 @@ ROOT = Path(__file__).resolve().parent.parent
 CONFIG_FILE = ROOT / "config" / "scoring.yaml"
 OUTPUT_FILE = ROOT / "sources" / "raw" / "evaluations.csv"
 
-DIMENSIONS = {
-    "market_demand": 20,
-    "narrative_attention": 15,
-    "audience_distribution": 15,
-    "wallet_intelligence": 10,
-    "timing_and_access": 15,
-    "exit_and_liquidity": 15,
-    "acquisition_economics": 5,
-    "project_credibility": 5,
-}
-
 FIELDS = [
-    "evaluation_id",
-    "project_id",
-    "evaluated_at",
-    "opportunity_type",
-    "opportunity_score",
-    "evidence_coverage",
-    "qualification_status",
-    "assessable_weight",
-    "unknown_dimensions",
+    "evaluation_id", "project_id", "evaluated_at",
+    "opportunity_type", "opportunity_score",
+    "evidence_coverage", "qualification_status",
+    "assessable_weight", "unknown_dimensions",
     "dimension_scores",
 ]
+
+
+def load_config():
+    try:
+        import yaml
+    except ImportError:
+        raise SystemExit("Install PyYAML before running evaluation.")
+
+    with CONFIG_FILE.open("r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+
+    scoring = config["scoring"]
+    dimensions = {
+        name: int(data["weight"])
+        for name, data in scoring["dimensions"].items()
+    }
+
+    if sum(dimensions.values()) != 100:
+        raise SystemExit("Scoring dimension weights must total 100.")
+
+    return config, dimensions
 
 
 def load_existing():
@@ -41,88 +46,77 @@ def load_existing():
         return list(csv.DictReader(file))
 
 
-def evaluate(item):
+def evaluate(item, config, dimensions):
     project_id = str(item.get("project_id", "")).strip()
-
-    if not project_id:
-        return None
-
     ratings = item.get("ratings", {})
-    if not isinstance(ratings, dict):
+
+    if not project_id or not isinstance(ratings, dict):
         return None
 
-    earned_points = 0
-    assessable_weight = 0
-    unknown_dimensions = []
-    normalized_scores = {}
+    earned = 0
+    assessable = 0
+    unknown = []
+    normalized = {}
 
-    for dimension, weight in DIMENSIONS.items():
+    for dimension, weight in dimensions.items():
         rating = ratings.get(dimension)
-
-        if rating is None:
-            unknown_dimensions.append(dimension)
-            normalized_scores[dimension] = None
-            continue
 
         try:
             rating = float(rating)
+            if not 0 <= rating <= 5:
+                raise ValueError
         except (ValueError, TypeError):
-            unknown_dimensions.append(dimension)
-            normalized_scores[dimension] = None
+            unknown.append(dimension)
+            normalized[dimension] = None
             continue
 
-        if not 0 <= rating <= 5:
-            unknown_dimensions.append(dimension)
-            normalized_scores[dimension] = None
-            continue
+        earned += (rating / 5) * weight
+        assessable += weight
+        normalized[dimension] = rating
 
-        earned_points += (rating / 5) * weight
-        assessable_weight += weight
-        normalized_scores[dimension] = rating
-
-    if assessable_weight == 0:
+    if assessable == 0:
         return None
 
-    score = round(
-        earned_points / assessable_weight * 100, 2
+    score = round(earned / assessable * 100, 2)
+    coverage = round(assessable / 100, 2)
+
+    opportunity_type = item.get("opportunity_type", "free_mint")
+    qualification_config = config.get("qualification", {}).get(
+        opportunity_type, {}
     )
 
-    coverage = round(assessable_weight / 100, 2)
+    minimum_score = qualification_config.get("minimum_score")
 
-    opportunity_type = item.get(
-        "opportunity_type", "free_mint"
+    minimum_coverage = qualification_config.get(
+        "minimum_evidence_coverage",
+        config["scoring"]["evidence_coverage"].get(
+            "minimum_for_qualification", 0.60
+        ),
     )
 
-    threshold = {
-        "free_mint": 70,
-        "paid_mint": 90,
-    }.get(opportunity_type)
-
-    if threshold is None:
+    if minimum_score is None:
         qualification = "provisional"
-    elif coverage < 0.60:
-        qualification = "insufficient_evidence"
-    elif score >= threshold:
+    elif coverage < minimum_coverage:
+        qualification = "provisional"
+    elif score >= minimum_score:
         qualification = "qualified"
     else:
         qualification = "active_watchlist"
 
+    now = datetime.now(timezone.utc).isoformat()
+
     return {
-        "evaluation_id": str(
-            item.get("evaluation_id") or
-            f"{project_id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
-        ),
+        "evaluation_id": item.get("evaluation_id") or
+            f"{project_id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}",
         "project_id": project_id,
-        "evaluated_at": datetime.now(timezone.utc).isoformat(),
+        "evaluated_at": now,
         "opportunity_type": opportunity_type,
         "opportunity_score": score,
         "evidence_coverage": coverage,
         "qualification_status": qualification,
-        "assessable_weight": assessable_weight,
-        "unknown_dimensions": ";".join(unknown_dimensions),
-        "dimension_scores": json.dumps(
-            normalized_scores, ensure_ascii=False
-        ),
+        "assessable_weight": assessable,
+        "unknown_dimensions": ";".join(unknown),
+        "dimension_scores": json.dumps(normalized, ensure_ascii=False),
     }
 
 
@@ -130,33 +124,25 @@ def main():
     parser = argparse.ArgumentParser(
         description="Calculate evidence-based opportunity scores."
     )
-
-    parser.add_argument(
-        "--input",
-        required=True,
-        help="Path to a JSONL file containing project ratings."
-    )
-
+    parser.add_argument("--input", required=True)
     args = parser.parse_args()
+
     input_file = Path(args.input)
 
     if not input_file.exists():
-        raise SystemExit(f"Input file not found: {input_file}")
+        raise SystemExit("Input file not found.")
 
     if not CONFIG_FILE.exists():
         raise SystemExit("Scoring configuration not found.")
 
-    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-
+    config, dimensions = load_config()
     existing = load_existing()
-    known_ids = {
-        row.get("evaluation_id", "") for row in existing
-    }
 
+    known_ids = {row.get("evaluation_id", "") for row in existing}
     added = 0
     skipped = 0
 
-    with input_file.open("r", encoding="utf-8") as file:
+    with input_file.open("r", encoding="utf-8-sig") as file:
         for line in file:
             if not line.strip():
                 continue
@@ -171,19 +157,17 @@ def main():
                 skipped += 1
                 continue
 
-            record = evaluate(item)
+            record = evaluate(item, config, dimensions)
 
-            if record is None:
-                skipped += 1
-                continue
-
-            if record["evaluation_id"] in known_ids:
+            if record is None or record["evaluation_id"] in known_ids:
                 skipped += 1
                 continue
 
             existing.append(record)
             known_ids.add(record["evaluation_id"])
             added += 1
+
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     with OUTPUT_FILE.open("w", encoding="utf-8", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=FIELDS)
@@ -194,7 +178,6 @@ def main():
     print(f"New evaluations: {added}")
     print(f"Skipped: {skipped}")
     print(f"Total evaluations: {len(existing)}")
-    print(f"Output: {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
