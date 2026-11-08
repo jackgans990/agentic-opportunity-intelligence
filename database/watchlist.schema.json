@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Opportunity Watchlist Entry",
+  "type": "object",
+  "required": [
+    "watchlist_id",
+    "entity_type",
+    "entity_id",
+    "status",
+    "added_at"
+  ],
+  "properties": {
+    "watchlist_id": {
+      "type": "string"
+    },
+    "entity_type": {
+      "type": "string",
+      "enum": ["project", "wallet", "source", "account"]
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "reassessing", "qualified", "expired", "removed"]
+    },
+    "reason_added": {
+      "type": ["string", "null"]
+    },
+    "missing_evidence": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "last_evaluated_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "next_review_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "added_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "removal_reason": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}
