@@ -1,0 +1,48 @@
+version: 1
+
+chains:
+  bsc:
+    name: BNB Smart Chain
+    chain_id: 56
+    enabled: true
+    priority: high
+    focus:
+      - agentic_nfts
+      - free_mints
+      - nft_marketplaces
+      - tokens
+      - wallet_activity
+
+  ethereum:
+    name: Ethereum
+    chain_id: 1
+    enabled: true
+    priority: medium
+    focus:
+      - agentic_ecosystems
+      - nfts
+      - tokens
+      - wallet_activity
+
+  base:
+    name: Base
+    chain_id: 8453
+    enabled: true
+    priority: medium
+    focus:
+      - agentic_ecosystems
+      - nfts
+      - free_mints
+      - tokens
+
+monitoring_rules:
+  - Never assume a project is legitimate based only on its chain.
+  - Verify contract addresses from official sources.
+  - Record the network and contract address for every opportunity.
+  - Treat unavailable RPC or API data as unknown, not negative evidence.
+  - Do not execute transactions on unsupported or unverified networks.
+
+defaults:
+  language: Indonesian
+  preserve_raw_data: true
+  record_observation_timestamp: true
