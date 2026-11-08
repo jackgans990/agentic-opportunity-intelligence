@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Grok Research Output",
+  "type": "object",
+  "required": [
+    "project_name",
+    "discovery_source",
+    "discovered_at",
+    "claims"
+  ],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "website": {
+      "type": ["string", "null"]
+    },
+    "x_account": {
+      "type": ["string", "null"]
+    },
+    "chain": {
+      "type": ["string", "null"]
+    },
+    "category": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "discovery_source": {
+      "type": "string"
+    },
+    "discovery_query": {
+      "type": ["string", "null"]
+    },
+    "discovered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim",
+          "source",
+          "evidence_type"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "evidence_type": {
+            "type": "string"
+          },
+          "evidence_status": {
+            "type": "string",
+            "enum": [
+              "unverified",
+              "partially_verified",
+              "verified",
+              "contradicted"
+            ]
+          },
+          "confidence": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risk_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
