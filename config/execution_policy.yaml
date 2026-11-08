@@ -38,9 +38,8 @@ free_mint:
   # Gas is real money. These limits apply even when the mint itself is free.
   limits:
     allowed_chains: [bsc]                 # SET THIS (bsc | ethereum | base)
-    max_gas_per_tx_usd: 1                 # SET THIS
-    max_total_gas_per_day_usd: 3          # SET THIS
-    max_mints_per_day: 5                  # SET THIS
+    max_gas_per_tx_usd: 0.20                 # SET THIS
+    max_total_gas_per_day_usd: 2          # SET THIS
     max_mints_per_contract: 1             # SET THIS (raise only if the project officially allows more)
     stop_after_consecutive_failures: 3
     stop_after_consecutive_failures_action: emergency_stop_and_report
