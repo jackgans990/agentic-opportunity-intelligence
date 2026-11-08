@@ -1,0 +1,73 @@
+version: 1
+
+keyword_groups:
+  agentic_ecosystem:
+    priority: high
+    terms:
+      - agentic
+      - AI agent
+      - autonomous agent
+      - agent economy
+      - agent identity
+      - agent wallet
+      - agent infrastructure
+      - onchain agent
+
+  nft_opportunities:
+    priority: high
+    terms:
+      - agentic NFT
+      - agent NFT
+      - free mint
+      - free claim
+      - NFT launch
+      - NFT mint
+      - genesis NFT
+      - NFT collection
+      - allowlist
+      - whitelist
+      - mint window
+
+  token_opportunities:
+    priority: medium
+    terms:
+      - token launch
+      - fair launch
+      - token generation event
+      - TGE
+      - agent token
+      - ecosystem token
+
+  early_signals:
+    priority: high
+    terms:
+      - coming soon
+      - mint soon
+      - claim live
+      - early access
+      - genesis
+      - first holders
+      - initial distribution
+      - limited supply
+      - launch announcement
+
+  chinese_ct:
+    priority: high
+    terms:
+      - AI Agent
+      - 智能体
+      - 链上智能体
+      - 免费铸造
+      - NFT铸造
+      - 空投
+      - 白名单
+      - 早期项目
+      - 项目上线
+
+discovery_rules:
+  broad_discovery: true
+  preserve_original_search_terms: true
+  record_keyword_source: true
+  record_discovery_timestamp: true
+  do_not_reject_candidate_by_keyword_alone: true
+  classify_matches_before_evaluation: true
