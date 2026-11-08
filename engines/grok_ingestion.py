@@ -1,7 +1,10 @@
+
 import argparse
 import csv
+import hashlib
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -32,6 +35,17 @@ VALID_STATUSES = {
     "unverified", "partially_verified", "verified", "contradicted"
 }
 
+TOP_LEVEL_FIELDS = {
+    "project_name", "website", "x_account", "discord_url",
+    "chain", "category", "discovery_source", "discovery_query",
+    "discovered_at", "claims", "unknowns", "risk_notes"
+}
+
+CLAIM_FIELDS = {
+    "claim", "source", "evidence_type",
+    "evidence_status", "confidence"
+}
+
 
 def normalize(value):
     return re.sub(r"\s+", " ", str(value or "").strip()).lower()
@@ -48,7 +62,7 @@ def make_project_id(item):
 
 def make_evidence_id(project_id, claim_text, source):
     identity = f"{project_id}|{normalize(claim_text)}|{normalize(source)}"
-    return make_project_id({"project_name": identity})
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
 
 
 def read_csv(path):
@@ -60,15 +74,103 @@ def read_csv(path):
 
 def write_csv(path, fields, rows):
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Preserve any additional columns already present in older CSV files.
+    all_fields = list(fields)
+    for row in rows:
+        for key in row:
+            if key not in all_fields:
+                all_fields.append(key)
+
     with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
+        writer = csv.DictWriter(f, fieldnames=all_fields)
         writer.writeheader()
         writer.writerows(rows)
 
 
+def validate_item(item):
+    if not isinstance(item, dict):
+        return "Record must be a JSON object."
+
+    extra = set(item) - TOP_LEVEL_FIELDS
+    if extra:
+        return f"Unknown top-level fields: {', '.join(sorted(extra))}"
+
+    required = {"project_name", "discovery_source", "discovered_at", "claims"}
+    missing = required - set(item)
+    if missing:
+        return f"Missing required fields: {', '.join(sorted(missing))}"
+
+    if not isinstance(item["project_name"], str) or not item["project_name"].strip():
+        return "project_name must be a non-empty string."
+
+    if not isinstance(item["discovery_source"], str):
+        return "discovery_source must be a string."
+
+    try:
+        timestamp = item["discovered_at"]
+        if not isinstance(timestamp, str):
+            raise ValueError()
+        parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            raise ValueError()
+    except (ValueError, TypeError):
+        return "discovered_at must be a date-time with timezone."
+
+    for field in ("website", "x_account", "discord_url", "chain", "discovery_query"):
+        if field in item and item[field] is not None and not isinstance(item[field], str):
+            return f"{field} must be a string or null."
+
+    if "category" in item:
+        if not isinstance(item["category"], list) or not all(
+            isinstance(value, str) for value in item["category"]
+        ):
+            return "category must be an array of strings."
+
+    for field in ("unknowns", "risk_notes"):
+        if field in item and (
+            not isinstance(item[field], list)
+            or not all(isinstance(value, str) for value in item[field])
+        ):
+            return f"{field} must be an array of strings."
+
+    if not isinstance(item["claims"], list):
+        return "claims must be an array."
+
+    for index, claim in enumerate(item["claims"]):
+        if not isinstance(claim, dict):
+            return f"Claim {index + 1} must be an object."
+
+        extra_claim_fields = set(claim) - CLAIM_FIELDS
+        if extra_claim_fields:
+            return f"Claim {index + 1} has unknown fields: {', '.join(sorted(extra_claim_fields))}"
+
+        for field in ("claim", "source", "evidence_type"):
+            if field not in claim:
+                return f"Claim {index + 1} is missing {field}."
+
+        if not isinstance(claim["claim"], str) or not isinstance(claim["source"], str):
+            return f"Claim {index + 1}: claim and source must be strings."
+
+        if claim["evidence_type"] not in VALID_EVIDENCE_TYPES:
+            return f"Claim {index + 1} has invalid evidence_type."
+
+        if "evidence_status" in claim and claim["evidence_status"] not in VALID_STATUSES:
+            return f"Claim {index + 1} has invalid evidence_status."
+
+        confidence = claim.get("confidence")
+        if confidence is not None:
+            if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
+                return f"Claim {index + 1}: confidence must be a number or null."
+            if not 0 <= confidence <= 1:
+                return f"Claim {index + 1}: confidence must be between 0 and 1."
+
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Import structured Grok research into the database."
+        description="Import validated Grok research into the database."
     )
     parser.add_argument("--input", required=True)
     args = parser.parse_args()
@@ -80,8 +182,8 @@ def main():
     projects = read_csv(PROJECT_FILE)
     evidence = read_csv(EVIDENCE_FILE)
 
-    project_ids = {r["project_id"] for r in projects}
-    evidence_ids = {r["evidence_id"] for r in evidence}
+    project_ids = {row.get("project_id", "") for row in projects}
+    evidence_ids = {row.get("evidence_id", "") for row in evidence}
 
     added_projects = 0
     added_evidence = 0
@@ -94,41 +196,36 @@ def main():
 
             try:
                 item = json.loads(line)
-            except json.JSONDecodeError:
-                print(f"Invalid JSON at line {line_number}")
+            except json.JSONDecodeError as error:
+                print(f"Line {line_number}: invalid JSON ({error.msg})")
                 skipped += 1
                 continue
 
-            if not isinstance(item, dict):
-                skipped += 1
-                continue
-
-            name = str(item.get("project_name") or "").strip()
-            if not name:
+            error = validate_item(item)
+            if error:
+                print(f"Line {line_number}: {error}")
                 skipped += 1
                 continue
 
             project_id = make_project_id(item)
+            if not project_id:
+                print(f"Line {line_number}: could not generate project ID.")
+                skipped += 1
+                continue
 
-            category = item.get("category", [])
-            if isinstance(category, list):
-                category = ", ".join(str(x) for x in category)
-            elif category is None:
-                category = ""
-            else:
-                category = str(category)
+            category = ", ".join(item.get("category", []))
 
             if project_id not in project_ids:
                 projects.append({
                     "project_id": project_id,
-                    "project_name": name,
+                    "project_name": item["project_name"].strip(),
                     "website": item.get("website") or "",
                     "x_account": item.get("x_account") or "",
                     "discord_url": item.get("discord_url") or "",
                     "chain": item.get("chain") or "",
                     "category": category,
-                    "first_seen_at": item.get("discovered_at", ""),
-                    "discovery_source": item.get("discovery_source", ""),
+                    "first_seen_at": item["discovered_at"],
+                    "discovery_source": item["discovery_source"],
                     "discovery_query": item.get("discovery_query") or "",
                     "initial_status": "discovered",
                     "verification_status": "unverified",
@@ -137,52 +234,29 @@ def main():
                 project_ids.add(project_id)
                 added_projects += 1
 
-            claims = item.get("claims", [])
-            if not isinstance(claims, list):
-                skipped += 1
-                continue
-
-            for claim in claims:
-                if not isinstance(claim, dict):
-                    skipped += 1
-                    continue
-
-                claim_text = str(claim.get("claim") or "").strip()
-                source = str(claim.get("source") or "").strip()
+            for claim in item["claims"]:
+                claim_text = claim["claim"].strip()
+                source = claim["source"].strip()
 
                 if not claim_text or not source:
                     skipped += 1
                     continue
 
-                evidence_id = make_evidence_id(
-                    project_id, claim_text, source
-                )
+                evidence_id = make_evidence_id(project_id, claim_text, source)
 
                 if evidence_id in evidence_ids:
                     continue
 
-                evidence_type = claim.get("evidence_type", "other")
-                if evidence_type not in VALID_EVIDENCE_TYPES:
-                    evidence_type = "other"
-
-                status = claim.get("evidence_status", "unverified")
-                if status not in VALID_STATUSES:
-                    status = "unverified"
-
-                confidence = claim.get("confidence")
-                if not isinstance(confidence, (int, float)):
-                    confidence = ""
-
                 evidence.append({
                     "evidence_id": evidence_id,
                     "entity_id": project_id,
-                    "evidence_type": evidence_type,
+                    "evidence_type": claim["evidence_type"],
                     "claim": claim_text,
                     "source": source,
-                    "source_type": item.get("discovery_source", ""),
-                    "evidence_status": status,
-                    "confidence": confidence,
-                    "observed_at": item.get("discovered_at", ""),
+                    "source_type": item["discovery_source"],
+                    "evidence_status": claim.get("evidence_status", "unverified"),
+                    "confidence": claim.get("confidence") if claim.get("confidence") is not None else "",
+                    "observed_at": item["discovered_at"],
                     "raw_data_reference": "",
                     "notes": "Imported from Grok research"
                 })
