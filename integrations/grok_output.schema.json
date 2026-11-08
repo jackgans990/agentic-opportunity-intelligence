@@ -14,16 +14,28 @@
       "minLength": 1
     },
     "website": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "x_account": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "discord_url": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "chain": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "category": {
       "type": "array",
@@ -35,7 +47,10 @@
       "type": "string"
     },
     "discovery_query": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "discovered_at": {
       "type": "string",
@@ -45,7 +60,11 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["claim", "source", "evidence_type"],
+        "required": [
+          "claim",
+          "source",
+          "evidence_type"
+        ],
         "properties": {
           "claim": {
             "type": "string"
@@ -75,7 +94,10 @@
             ]
           },
           "confidence": {
-            "type": ["number", "null"],
+            "type": [
+              "number",
+              "null"
+            ],
             "minimum": 0,
             "maximum": 1
           }
@@ -94,6 +116,78 @@
       "items": {
         "type": "string"
       }
+    },
+    "contract_address": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^0x[a-fA-F0-9]{40}$"
+    },
+    "mint_function": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mint_price_native": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "max_supply": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "mint_window": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "opens_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "closes_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "requires_token_approval": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "requires_signature": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "official_source_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "possible_prompt_injection": {
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false

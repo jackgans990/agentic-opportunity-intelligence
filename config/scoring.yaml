@@ -1,4 +1,4 @@
-version: 1
+version: 2
 
 scoring:
   maximum_score: 100
@@ -70,3 +70,29 @@ rules:
   - New evidence must trigger reassessment.
   - Security failures must block execution regardless of Opportunity Score.
   - Displayed floor prices must not be treated as guaranteed exit values.
+
+# Rating anchors (0-5). Use these so scores are comparable between runs.
+rubric:
+  scale:
+    0: "Verified negative evidence (for example, contradicted claims or a confirmed red flag)."
+    1: "Very weak. Only unverified social claims or hype, no independent support."
+    2: "Weak. Limited evidence, mostly unverified, or clearly small in scale."
+    3: "Moderate. Some independently verifiable evidence, but gaps remain."
+    4: "Strong. Multiple independent, verifiable sources support it."
+    5: "Very strong. Directly verified on-chain or officially, and consistent across sources."
+  rules:
+    - "Unverified social claims alone can never earn a rating above 2 on any dimension."
+    - "A rating above 3 requires at least one independently verifiable source (official account, explorer, on-chain data)."
+    - "If evidence cannot be assessed, use null (unknown), not 0."
+    - "Every rating must cite the evidence it is based on."
+
+# Dimensions that must be assessed (not unknown) before ANY automatic execution.
+# A project can still be a watchlist candidate without them.
+execution_gate:
+  required_dimensions_assessed:
+    - timing_and_access
+    - project_credibility
+    - audience_distribution
+  rules:
+    - "Missing required dimensions means the opportunity stays on the active watchlist, even if the score is above threshold."
+    - "Execution Readiness security checks are separate and always required."
