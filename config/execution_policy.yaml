@@ -1,0 +1,51 @@
+version: 1
+
+global:
+  require_execution_readiness: true
+  require_security_checks: true
+  never_expose_private_keys: true
+  never_store_seed_phrases: true
+  never_auto_sell_assets: true
+
+free_mint:
+  minimum_opportunity_score: 70
+  auto_execute: true
+
+  requirements:
+    - genuinely_gas_only
+    - contract_verified
+    - transaction_simulation_passed
+    - no_token_approval
+    - no_hidden_payment
+    - no_unexpected_asset_transfer
+    - no_ambiguous_signature
+    - safe_contract_permissions
+    - wallet_balance_sufficient_for_gas
+
+  on_uncertainty: stop_and_request_user_confirmation
+  on_security_failure: block_execution
+
+paid_mint:
+  minimum_opportunity_score: 90
+  auto_execute: false
+  require_explicit_user_approval: true
+
+asset_disposal:
+  auto_sell: false
+  require_explicit_user_approval: true
+
+transaction_limits:
+  maximum_value_without_confirmation: 0
+  require_simulation: true
+  require_transaction_summary: true
+
+reporting:
+  language: Indonesian
+  include:
+    - opportunity_score
+    - execution_readiness
+    - contract_address
+    - transaction_type
+    - estimated_gas
+    - required_approvals
+    - identified_risks
