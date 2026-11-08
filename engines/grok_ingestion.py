@@ -1,7 +1,7 @@
 import argparse
 import csv
-import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -23,21 +23,32 @@ EVIDENCE_FIELDS = [
 ]
 
 VALID_EVIDENCE_TYPES = {
-    "official_announcement",
-    "social_signal",
-    "wallet_activity",
-    "onchain_transaction",
-    "market_activity",
-    "security_finding",
+    "official_announcement", "social_signal", "wallet_activity",
+    "onchain_transaction", "market_activity", "security_finding",
     "other"
 }
 
 VALID_STATUSES = {
-    "unverified",
-    "partially_verified",
-    "verified",
-    "contradicted"
+    "unverified", "partially_verified", "verified", "contradicted"
 }
+
+
+def normalize(value):
+    return re.sub(r"\s+", " ", str(value or "").strip()).lower()
+
+
+def make_project_id(item):
+    identity = "|".join([
+        normalize(item.get("project_name")),
+        normalize(item.get("chain")),
+        normalize(item.get("website"))
+    ])
+    return re.sub(r"[^a-z0-9]+", "-", identity).strip("-")
+
+
+def make_evidence_id(project_id, claim_text, source):
+    identity = f"{project_id}|{normalize(claim_text)}|{normalize(source)}"
+    return make_project_id({"project_name": identity})
 
 
 def read_csv(path):
@@ -53,12 +64,6 @@ def write_csv(path, fields, rows):
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
-
-
-def make_id(value):
-    return hashlib.sha256(
-        value.encode("utf-8")
-    ).hexdigest()[:16]
 
 
 def main():
@@ -98,18 +103,20 @@ def main():
                 skipped += 1
                 continue
 
-            name = str(item.get("project_name", "")).strip()
+            name = str(item.get("project_name") or "").strip()
             if not name:
                 skipped += 1
                 continue
 
-            project_id = make_id(
-                "|".join([
-                    name.lower(),
-                    str(item.get("chain") or "").lower(),
-                    str(item.get("website") or "").lower()
-                ])
-            )
+            project_id = make_project_id(item)
+
+            category = item.get("category", [])
+            if isinstance(category, list):
+                category = ", ".join(str(x) for x in category)
+            elif category is None:
+                category = ""
+            else:
+                category = str(category)
 
             if project_id not in project_ids:
                 projects.append({
@@ -119,7 +126,7 @@ def main():
                     "x_account": item.get("x_account") or "",
                     "discord_url": item.get("discord_url") or "",
                     "chain": item.get("chain") or "",
-                    "category": ", ".join(item.get("category", [])),
+                    "category": category,
                     "first_seen_at": item.get("discovered_at", ""),
                     "discovery_source": item.get("discovery_source", ""),
                     "discovery_query": item.get("discovery_query") or "",
@@ -130,20 +137,25 @@ def main():
                 project_ids.add(project_id)
                 added_projects += 1
 
-            for index, claim in enumerate(item.get("claims", [])):
+            claims = item.get("claims", [])
+            if not isinstance(claims, list):
+                skipped += 1
+                continue
+
+            for claim in claims:
                 if not isinstance(claim, dict):
                     skipped += 1
                     continue
 
-                claim_text = str(claim.get("claim", "")).strip()
-                source = str(claim.get("source", "")).strip()
+                claim_text = str(claim.get("claim") or "").strip()
+                source = str(claim.get("source") or "").strip()
 
                 if not claim_text or not source:
                     skipped += 1
                     continue
 
-                evidence_id = make_id(
-                    f"{project_id}|{index}|{claim_text}|{source}"
+                evidence_id = make_evidence_id(
+                    project_id, claim_text, source
                 )
 
                 if evidence_id in evidence_ids:
