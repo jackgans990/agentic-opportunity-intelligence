@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Opportunity Project",
+  "type": "object",
+  "required": [
+    "project_id",
+    "name",
+    "status",
+    "discovered_at",
+    "discovery_source"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "ecosystem": {
+      "type": ["string", "null"]
+    },
+    "chain": {
+      "type": ["string", "null"]
+    },
+    "contract_address": {
+      "type": ["string", "null"]
+    },
+    "category": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "discovered",
+        "investigating",
+        "watchlist",
+        "qualified",
+        "execution_ready",
+        "executed",
+        "expired",
+        "rejected"
+      ]
+    },
+    "opportunity_score": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100
+    },
+    "execution_readiness": {
+      "type": ["string", "null"],
+      "enum": [
+        "not_assessed",
+        "blocked",
+        "not_ready",
+        "ready",
+        null
+      ]
+    },
+    "discovered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "discovery_source": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_updated_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risk_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_action": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}
