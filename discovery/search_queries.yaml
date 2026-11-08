@@ -1,0 +1,63 @@
+version: 1
+
+search_categories:
+
+  agentic_projects:
+    priority: high
+    queries:
+      - '"agentic" AND (launch OR genesis OR ecosystem)'
+      - '"AI agent" AND (onchain OR blockchain)'
+      - '"agent wallet" AND (launch OR mint)'
+      - '"agent identity" AND blockchain'
+
+  free_mint_opportunities:
+    priority: critical
+    queries:
+      - '"free mint" AND (agent OR AI OR NFT)'
+      - '"free claim" AND NFT'
+      - '"gas only" AND NFT mint'
+      - '"genesis NFT" AND agent'
+      - '"free mint" AND BNB Chain'
+
+  early_launches:
+    priority: high
+    queries:
+      - '"coming soon" AND agentic'
+      - '"mint soon" AND NFT'
+      - '"early access" AND agent ecosystem'
+      - '"genesis launch" AND AI agent'
+
+  wallet_intelligence:
+    priority: high
+    queries:
+      - '"smart money" AND NFT mint'
+      - '"early wallet" AND NFT'
+      - '"agent wallet" AND onchain activity'
+      - '"wallet cluster" AND NFT'
+
+  chinese_community:
+    priority: high
+    queries:
+      - 'AI智能体 NFT 项目'
+      - '免费铸造 NFT'
+      - '链上智能体 项目'
+      - 'AI Agent 项目上线'
+      - 'NFT 免费 Mint'
+
+source_types:
+  - official_project_accounts
+  - x_community_accounts
+  - chinese_crypto_communities
+  - blockchain_explorers
+  - nft_marketplaces
+  - project_websites
+  - onchain_data_platforms
+
+rules:
+  - Search broadly before filtering.
+  - Preserve original query and source.
+  - Record discovery timestamps.
+  - Deduplicate without deleting original evidence.
+  - Treat search results as unverified candidates.
+  - Verify important claims using primary sources.
+  - Do not treat search ranking as evidence of quality.
