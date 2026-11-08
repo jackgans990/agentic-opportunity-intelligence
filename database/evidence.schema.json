@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Opportunity Evidence",
+  "type": "object",
+  "required": [
+    "evidence_id",
+    "entity_id",
+    "evidence_type",
+    "source",
+    "observed_at"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "official_announcement",
+        "social_signal",
+        "wallet_activity",
+        "onchain_transaction",
+        "market_activity",
+        "security_finding",
+        "other"
+      ]
+    },
+    "claim": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": ["string", "null"]
+    },
+    "evidence_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "partially_verified",
+        "verified",
+        "contradicted"
+      ],
+      "default": "unverified"
+    },
+    "confidence": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "raw_data_reference": {
+      "type": ["string", "null"]
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}
