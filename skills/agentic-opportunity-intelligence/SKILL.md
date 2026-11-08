@@ -42,6 +42,7 @@ Use these repository datasets as initial discovery seeds:
 - `sources/raw/chinese_ct_accounts.csv`
 
 These datasets are unverified starting points.
+They are starting points, not limits. Expand discovery beyond them.
 
 Do not automatically classify a wallet as smart money or an account as reliable merely because it appears in the raw datasets.
 
@@ -237,7 +238,7 @@ Do not claim predictive superiority without sufficient historical evidence.
 
 ## 13. Repository Integrity
 
-Keep raw datasets immutable.
+Keep initial_wallets.csv immutable. chinese_ct_accounts.csv and discovered_*.csv are append-only working files: add rows with provenance, but never edit or delete existing rows.
 
 Store enriched intelligence, candidates, watchlists, evidence, and decision logs separately.
 

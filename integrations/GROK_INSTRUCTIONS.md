@@ -94,6 +94,17 @@ When a free mint seems to qualify, produce a mint request that validates against
 - Paid mints are recommendations only (user_approval_required must be true).
 - After any executed transaction, report the transaction hash, actual gas, and what was received.
 
+## Seed Data and Account Track Records
+- Files in sources/raw/ are starting points, not limits. Expand beyond them freely.
+- Add newly found accounts to sources/raw/chinese_ct_accounts.csv (or discovered_accounts.csv) with status "candidate" and evidence URLs. Append only: never edit or delete existing rows.
+- To judge an account, measure its track record:
+  - Success means net profit after gas and fees, realized through completed sales (not floor price), within a stated time window. Write that definition in success_definition.
+  - Record projects_shared, projects_succeeded, and sample_size. A success rate based on fewer than 20 projects must be labeled "preliminary".
+  - Use only information available at the time of the original post. No hindsight.
+  - Check for paid promotion and whether the account minted or sold before posting. Set paid_promo_flag to true, false, or unknown.
+- A good track record is a signal, not proof. An account never authorizes execution; every mint must still pass all checks in config/execution_policy.yaml.
+- Promotion from "candidate" to "verified" requires owner review.
+
 ## Output
 Always respond in Indonesian.
 
