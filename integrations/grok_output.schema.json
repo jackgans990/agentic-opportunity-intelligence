@@ -19,6 +19,9 @@
     "x_account": {
       "type": ["string", "null"]
     },
+    "discord_url": {
+      "type": ["string", "null"]
+    },
     "chain": {
       "type": ["string", "null"]
     },
@@ -42,11 +45,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": [
-          "claim",
-          "source",
-          "evidence_type"
-        ],
+        "required": ["claim", "source", "evidence_type"],
         "properties": {
           "claim": {
             "type": "string"
@@ -55,7 +54,16 @@
             "type": "string"
           },
           "evidence_type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "official_announcement",
+              "social_signal",
+              "wallet_activity",
+              "onchain_transaction",
+              "market_activity",
+              "security_finding",
+              "other"
+            ]
           },
           "evidence_status": {
             "type": "string",
@@ -71,7 +79,8 @@
             "minimum": 0,
             "maximum": 1
           }
-        }
+        },
+        "additionalProperties": false
       }
     },
     "unknowns": {
