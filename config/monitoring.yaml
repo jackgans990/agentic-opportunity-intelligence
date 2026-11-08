@@ -1,0 +1,43 @@
+version: 1
+
+watchlist:
+  enabled: true
+  retain_below_threshold: true
+  retain_unknown_candidates: true
+  never_discard_without_reason: true
+
+  categories:
+    - projects
+    - wallets
+    - sources
+    - accounts
+
+reassessment:
+  enabled: true
+  trigger_on_new_evidence: true
+  trigger_on_material_events: true
+
+  events:
+    - project_announcement
+    - mint_schedule_change
+    - mint_opened
+    - free_mint_slots_available
+    - supply_change
+    - wallet_activity
+    - new_market_demand
+    - marketplace_opened
+    - completed_sales
+    - liquidity_change
+    - contract_change
+    - security_alert
+
+expiration:
+  require_expiration_reason: true
+  preserve_historical_record: true
+
+reporting:
+  language: Indonesian
+  report_score_changes: true
+  report_new_evidence: true
+  report_watchlist_status: true
+  report_new_candidates_for_review: true
