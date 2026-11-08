@@ -1,0 +1,72 @@
+version: 1
+
+scoring:
+  maximum_score: 100
+
+  dimensions:
+    market_demand:
+      weight: 20
+      description: Actual demand, buyers, participation, and transaction activity.
+
+    narrative_attention:
+      weight: 15
+      description: Market attention, emerging narratives, social momentum, and discussion growth.
+
+    audience_distribution:
+      weight: 15
+      description: Audience size, ecosystem reach, distribution quality, and potential user concentration.
+
+    wallet_intelligence:
+      weight: 10
+      description: Historical wallet behavior, early participation, and verified wallet relationships.
+
+    timing_and_access:
+      weight: 15
+      description: Opportunity window, discovery timing, mint access, remaining supply, and entry advantage.
+
+    exit_and_liquidity:
+      weight: 15
+      description: Actual buyers, completed sales, bids, liquidity, market depth, and realistic exit potential.
+
+    acquisition_economics:
+      weight: 5
+      description: Acquisition cost, fees, gas, and potential net return.
+
+    project_credibility:
+      weight: 5
+      description: Verifiable team, development, transparency, and product or ecosystem evidence.
+
+  rating_scale:
+    minimum: 0
+    maximum: 5
+    unknown: null
+
+  calculation:
+    method: normalized_weighted_score
+    formula: "earned_weighted_points / assessable_weight * 100"
+    unknown_evidence: exclude_from_assessable_weight
+    report_evidence_coverage: true
+
+  evidence_coverage:
+    formula: "assessable_weight / 100"
+    minimum_for_qualification: 0.60
+    below_minimum_action: active_watchlist
+
+qualification:
+  free_mint:
+    minimum_score: 70
+    minimum_evidence_coverage: 0.60
+
+  paid_mint:
+    minimum_score: 90
+    minimum_evidence_coverage: 0.60
+
+rules:
+  - Unknown information must never be treated as verified negative evidence.
+  - A score is not a probability of profit.
+  - Opportunity Score and Execution Readiness must remain separate.
+  - Insufficient evidence must produce a provisional assessment.
+  - Candidates below qualification thresholds must remain in the active watchlist.
+  - New evidence must trigger reassessment.
+  - Security failures must block execution regardless of Opportunity Score.
+  - Displayed floor prices must not be treated as guaranteed exit values.
